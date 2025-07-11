@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Update & Delete Payment by ID</title>
+</head>
+<body>
+<h3>Find Payment</h3>
+<input type="text" id="paymentId" placeholder="Enter payment ID">
+<button onclick="loadPayment()">Load Payment</button>
+<button onclick="deletePayment()">Delete Payment</button>
+
+<div id="updateFormContainer" style="display:none; margin-top:10px;">
+  <h3>Edit Payment</h3>
+  <form id="updateForm" onsubmit="submitUpdate(event)">
+    <input type="text" id="cardHolderName" placeholder="Card Holder Name"><br>
+    <input type="text" id="cardNumber" placeholder="Card Number"><br>
+    <input type="text" id="cvv" placeholder="CVV"><br>
+    <input type="text" id="expirationDate" placeholder="Expiration Date"><br>
+    <input type="text" id="cardNameBankName" placeholder="Card/Bank Name"><br>
+    <input type="text" id="recipientBankNumber" placeholder="Recipient Bank Number"><br>
+    <input type="text" id="reasonOfTransfer" placeholder="Reason of Transfer"><br>
+    <input type="number" id="amount" placeholder="Amount"><br>
+    <label>
+      Privacy: <input type="checkbox" id="privacy">
+    </label><br>
+    <button type="submit">Update Payment</button>
+  </form>
+</div>
+
+<script>
+async function loadPayment() {
+  const id = document.getElementById('paymentId').value.trim();
+  if (!id) return alert('Please enter an ID!');
+  try {
+    const response = await fetch('http://localhost:4000/api/payments');
+    const data = await response.json();
+    const payment = data.find(p => p._id === id);
+    if (!payment) {
+      alert('Payment not found!');
+      document.getElementById('updateFormContainer').style.display = 'none';
+      return;
+    }
+    // Fill form
+    document.getElementById('cardHolderName').value = payment.cardHolderName;
+    document.getElementById('cardNumber').value = payment.cardNumber;
+    document.getElementById('cvv').value = payment.cvv;
+    document.getElementById('expirationDate').value = payment.expirationDate;
+    document.getElementById('cardNameBankName').value = payment.cardNameBankName;
+    document.getElementById('recipientBankNumber').value = payment.recipientBankNumber;
+    document.getElementById('reasonOfTransfer').value = payment.reasonOfTransfer;
+    document.getElementById('amount').value = payment.amount;
+    document.getElementById('privacy').checked = payment.privacy;
+    document.getElementById('updateFormContainer').style.display = 'block';
+  } catch (error) {
+    console.error('Error loading payment:', error);
+    alert('Error fetching payment.');
+  }
+}
+
+async function submitUpdate(event) {
+  event.preventDefault();
+  const id = document.getElementById('paymentId').value.trim();
+  if (!id) return alert('No ID provided!');
+  const updatedData = {
+    cardHolderName: document.getElementById('cardHolderName').value,
+    cardNumber: document.getElementById('cardNumber').value,
+    cvv: document.getElementById('cvv').value,
+    expirationDate: document.getElementById('expirationDate').value,
+    cardNameBankName: document.getElementById('cardNameBankName').value,
+    recipientBankNumber: document.getElementById('recipientBankNumber').value,
+    reasonOfTransfer: document.getElementById('reasonOfTransfer').value,
+    amount: parseFloat(document.getElementById('amount').value),
+    privacy: document.getElementById('privacy').checked
+  };
+  try {
+    const response = await fetch(`http://localhost:4000/api/payments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedData)
+    });
+    const data = await response.json();
+    console.log('Updated:', data);
+    alert('Update successful!');
+  } catch (error) {
+    console.error('Error updating:', error);
+    alert('Error updating payment.');
+  }
+}
+
+async function deletePayment() {
+  const id = document.getElementById('paymentId').value.trim();
+  if (!id) return alert('Please enter an ID!');
+  if (!confirm('Are you sure you want to delete this payment?')) return;
+  try {
+    const response = await fetch(`http://localhost:4000/api/payments/${id}`, {
+      method: 'DELETE'
+    });
+    const data = await response.json();
+    console.log('Deleted:', data);
+    alert('Delete successful!');
+    document.getElementById('updateFormContainer').style.display = 'none';
+  } catch (error) {
+    console.error('Error deleting:', error);
+    alert('Error deleting payment.');
+  }
+}
+</script>
+</body>
+</html>
